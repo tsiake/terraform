@@ -14,7 +14,6 @@ resource "vultr_server" "web" {
     hostname = var.hostname
     ssh_key_ids = ["${data.vultr_ssh_key.terraform_key.id}"]
     firewall_group_id = vultr_firewall_group.web_firewall.id
-    user_data = file("userdata.sh")
 
     # copy all of our files to /tmp
     provisioner "file" {
