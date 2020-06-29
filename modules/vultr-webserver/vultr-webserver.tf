@@ -16,14 +16,32 @@ resource "vultr_server" "web" {
     firewall_group_id = vultr_firewall_group.web_firewall.id
     user_data = file("userdata.sh")
 
-    # get the public IP
-    provisioner "local-exec" {
-        command = "echo ${vultr_server.web.main_ip} > external_ip"
+    # copy all of our files to /tmp
+    provisioner "file" {
+        source = "files/"
+        destination = "/tmp/"
+        connection {
+            type = "ssh"
+            user = "root"
+            host = vultr_server.web.main_ip
+            password = vultr_server.web.default_password
+        }
+
     }
 
-    # upload a dummy index page
-    provisioner "file" {
-        source = "upload"
-        destination = "/home/web"
+    # setup nginx, certbot
+    provisioner "remote-exec" {
+        inline = [
+            "bash /tmp/setup.sh",
+            "echo 'nginx & cert setup complete...'"
+        ]
+
+        connection {
+            type = "ssh"
+            user = "root"
+            host = vultr_server.web.main_ip
+            password = vultr_server.web.default_password
+        }
     }
+
 }
