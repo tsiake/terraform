@@ -1,5 +1,5 @@
 provider "vultr" {
-    api_key = "NON2KYATVRBHNLSTKQ4NL2EGRXKLEEYMFS6Q"
+    api_key = var.api_key
     rate_limit  = 700
     retry_limit = 3
 }
