@@ -1,0 +1,54 @@
+provider "vultr" {
+    api_key = var.api_key
+    rate_limit  = 700
+    retry_limit = 3
+}
+
+# instantiate frostcull server
+resource "vultr_server" "frostcull" {
+    plan_id = "204"
+    region_id   = "4"
+    os_id = "167"
+    label = var.label
+    tag = var.tag
+    hostname = var.hostname
+    ssh_key_ids = ["${data.vultr_ssh_key.terraform_key.id}"]
+    firewall_group_id = vultr_firewall_group.frostcull_firewall.id
+    # need to update snapshot variable in vars.tf once created
+    # snapshot_id = var.snapshot
+    auto_backup = true
+    ddos_protection = true
+
+
+    # get the public IP
+    provisioner "local-exec" {
+        command = "echo ${vultr_server.frostcull.main_ip} > external_ip"
+    }
+
+    # copy all of our files to /tmp
+    provisioner "file" {
+        source = "files/"
+        destination = "/tmp/"
+        connection {
+            type = "ssh"
+            user = "root"
+            host = vultr_server.frostcull.main_ip
+            password = vultr_server.frostcull.default_password
+        }
+
+    }
+
+    # add ex permissions, run all scripts
+    provisioner "remote-exec" {
+        inline = [
+            "echo 'AC server setup complete...'"
+        ]
+
+        connection {
+            type = "ssh"
+            user = "root"
+            host = vultr_server.frostcull.main_ip
+            password = vultr_server.frostcull.default_password
+        }
+    }
+}
